@@ -47,8 +47,7 @@ namespace AzureSignin
             // option 2: use AzureServiceTokenProvider
             try
             {
-                // for exmaple: "AuthenticateAs=App;TenantId=72f988bf-86f1-41af-91ab-2d7cd011db47;AppId=91dd484c-2ed8-477f-aa68-d3d122f65ee9;CertificateSubjectName=CN=exampleappScriptCert";
-                string connectionString = string.Format("AuthenticateAs=App;TenantId={0};AppId={1};CertificateSubjectName={2}", TenantId, ClientId, CertificateSubjectName);
+                string connectionString = string.Format("RunAs=App;TenantId={0};AppId={1};CertificateSubjectName={2};CertificateStoreLocation=CurrentUser", TenantId, ClientId, CertificateSubjectName);
                 AzureServiceTokenProvider azureServiceTokenProvider = new AzureServiceTokenProvider(connectionString);
                 string accessToken1 = await azureServiceTokenProvider.GetAccessTokenAsync("https://management.azure.com/");
                 string accessToken2 = await azureServiceTokenProvider.GetAccessTokenAsync("https://vault.azure.net/");
