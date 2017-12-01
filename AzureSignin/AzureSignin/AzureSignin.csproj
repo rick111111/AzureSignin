@@ -96,6 +96,8 @@
   <ItemGroup>
     <Compile Include="AccessWithKeyVaultCertificate.cs" />
     <Compile Include="AccessWithLocalCertificate.cs" />
+    <Compile Include="AzureRequest.cs" />
+    <Compile Include="HttpClientSample.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

@@ -9,7 +9,7 @@ namespace AzureSignin
 {
     internal static class AccessWithLocalCertificate
     {
-        public static async Task<bool> Access()
+        public static async Task<string> Access()
         {
             // option 1: directly using certificate
             List<X509Certificate2> certs = GetCertificates(Configuration.CertificateSubjectName, false, StoreLocation.CurrentUser);
@@ -34,20 +34,21 @@ namespace AzureSignin
             }
 
             // option 2: use AzureServiceTokenProvider
+            string accessToken = "";
             try
             {
                 string connectionString = string.Format("RunAs=App;TenantId={0};AppId={1};CertificateSubjectName={2};CertificateStoreLocation=LocalMachine", 
                     Configuration.TenantId, Configuration.ClientId, Configuration.CertificateSubjectName);
                 AzureServiceTokenProvider azureServiceTokenProvider = new AzureServiceTokenProvider(connectionString);
-                string accessToken1 = await azureServiceTokenProvider.GetAccessTokenAsync("https://vault.azure.net/");
-                string accessToken2 = await azureServiceTokenProvider.GetAccessTokenAsync("https://management.azure.com/");
+                // string accessToken1 = await azureServiceTokenProvider.GetAccessTokenAsync("https://vault.azure.net/");
+                accessToken = await azureServiceTokenProvider.GetAccessTokenAsync("https://management.azure.com/");
             }
             catch (Exception e)
             {
                 Console.WriteLine(e.ToString());
             }
 
-            return true;
+            return accessToken;
         }
 
         private static List<X509Certificate2> GetCertificates(string subjectNameOrThumbprint, bool isThumbprint, StoreLocation location)

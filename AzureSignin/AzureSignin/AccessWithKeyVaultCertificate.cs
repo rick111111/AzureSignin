@@ -4,7 +4,6 @@ using Microsoft.Azure.Services.AppAuthentication;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using System;
 using System.Security.Cryptography.X509Certificates;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace AzureSignin
@@ -45,9 +44,9 @@ namespace AzureSignin
 
             string authority = String.Format(Configuration.Authority, Configuration.TenantId);
             AuthenticationContext authContext = new AuthenticationContext(authority);
-            var token = await authContext.AcquireTokenAsync("https://management.azure.com/", new ClientAssertionCertificate(Configuration.ClientId, cert));           
+            AuthenticationResult token = await authContext.AcquireTokenAsync("https://management.azure.com/", new ClientAssertionCertificate(Configuration.ClientId, cert));           
 
-            return "";
+            return token.AccessToken;
         }
     }
 }

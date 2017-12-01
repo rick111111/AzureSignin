@@ -12,7 +12,7 @@
     New-AzureRmRoleAssignment -RoleDefinitionName Contributor -ServicePrincipalName $sp.ApplicationId
     ```
 3. Mark the application id of the new created service principal, and use it later as the ClientId
-4. Note
+4. Upload certificate into KeyVault
     - After certificate is uploaded as .pfx file to Key Vault, I can't find a way to retrive the certificate back with private key. The CertificateBundle we get back will only contain public key which is not enough to get access token from Azure.
     - The only way that works here is to export the certificate as PFX content, save the bytearray as base64 format string, and upload to Key Vault as a secret string
         ```powershell
