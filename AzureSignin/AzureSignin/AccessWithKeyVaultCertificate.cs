@@ -42,6 +42,10 @@ namespace AzureSignin
             X509Certificate2 cert = new X509Certificate2();
             cert.Import(Convert.FromBase64String(certString));
 
+            // If you want to serialize the certificate to a file
+            //byte[] bytes = Convert.FromBase64String(certString);
+            //System.IO.File.WriteAllBytes("D:\\cert.pfx", bytes);
+
             string authority = String.Format(Configuration.Authority, Configuration.TenantId);
             AuthenticationContext authContext = new AuthenticationContext(authority);
             AuthenticationResult token = await authContext.AcquireTokenAsync("https://management.azure.com/", new ClientAssertionCertificate(Configuration.ClientId, cert));           
