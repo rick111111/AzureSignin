@@ -1,7 +1,6 @@
 ﻿using Microsoft.Azure.KeyVault;
 using Microsoft.Azure.KeyVault.Models;
 using Microsoft.Azure.Services.AppAuthentication;
-using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using System;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
@@ -10,9 +9,6 @@ namespace E2E
 {
     public static class AccessWithKeyVaultCertificate
     {
-        const string ProddiagVaultBaseUrl = "https://vsproddiag-test.vault.azure.net/";
-        const string ProddiagSecretName = "CertString";
-
         public static async Task<bool> Access()
         {           
             // According to https://docs.microsoft.com/en-us/azure/key-vault/service-to-service-authentication
@@ -25,7 +21,7 @@ namespace E2E
             string certString = string.Empty;
             using (var kv = new KeyVaultClient(new KeyVaultClient.AuthenticationCallback(azureServiceTokenProvider.KeyVaultTokenCallback)))
             {
-                SecretBundle secretBundle = await kv.GetSecretAsync(ProddiagVaultBaseUrl, ProddiagSecretName);
+                SecretBundle secretBundle = await kv.GetSecretAsync(Configuration.ProddiagVaultBaseUrl, Configuration.ProddiagSecretName);
                 certString = secretBundle.Value;
 
                 // The following code won't work, once certificate is uploaded into KeyVault, the certificate we get back from 

@@ -1,4 +1,6 @@
 ﻿using System;
+using System.IO;
+using Microsoft.Azure.Management.AppService.Fluent;
 using Microsoft.Azure.Management.Fluent;
 using Microsoft.Azure.Management.ResourceManager.Fluent;
 using Microsoft.Azure.Management.ResourceManager.Fluent.Authentication;
@@ -6,113 +8,132 @@ using Microsoft.Azure.Management.ResourceManager.Fluent.Core;
 
 namespace E2E
 {
-    static class Utilities
-    {
-        public static void Log(string s)
-        {
-            Console.WriteLine(s);
-        }
-
-        public static void Log(Exception ex)
-        {
-            Console.WriteLine(ex);
-        }
-    }
-
     public class ResourceManager
     {
+        private const string Suffix = ".azurewebsites.net";
+
         /**
-        * Azure Resource sample for managing resources -
-        * - Create a resource
-        * - Update a resource
-        * - Create another resource
-        * - List resources
-        * - Delete a resource.
-        */
+         * Azure App Service basic sample for managing web apps.
+         * Note: you need to have the Git command line available on your PATH. The sample makes a direct call to 'git'.
+         *  - Create 5 web apps under the same new app service plan:
+         *    - Deploy to 1 using FTP
+         *    - Deploy to 2 using local Git repository
+         *    - Deploy to 3 using a publicly available Git repository
+         *    - Deploy to 4 using a GitHub repository with continuous integration
+         *    - Deploy to 5 using Web Deploy
+         */
         public static void RunSample(IAzure azure)
         {
-            var resourceGroupName = SdkContext.RandomResourceName("rgRSMR", 24);
-            var resourceName1 = SdkContext.RandomResourceName("rn1", 24);
-            var resourceName2 = SdkContext.RandomResourceName("rn2", 24);
+            string app1Name = SdkContext.RandomResourceName("webapp1-", 20);
+            string app2Name = SdkContext.RandomResourceName("webapp2-", 20);
+            string app3Name = SdkContext.RandomResourceName("webapp3-", 20);
+            string app4Name = SdkContext.RandomResourceName("webapp4-", 20);
+            string app5Name = SdkContext.RandomResourceName("webapp5-", 20);
+            string app1Url = app1Name + Suffix;
+            string app2Url = app2Name + Suffix;
+            string app3Url = app3Name + Suffix;
+            string app4Url = app4Name + Suffix;
+            string app5Url = app5Name + Suffix;
+            string rgName = SdkContext.RandomResourceName("rg1NEMV_", 24);
 
             try
             {
-                //=============================================================
-                // Create resource group.
+                //============================================================
+                // Create a web app with a new app service plan
 
-                Utilities.Log("Creating a resource group with name: " + resourceGroupName);
+                Utilities.Log("Creating web app " + app1Name + " in resource group " + rgName + "...");
 
-                azure.ResourceGroups
-                    .Define(resourceGroupName)
-                    .WithRegion(Region.USWest)
+                var app1 = azure.WebApps
+                        .Define(app1Name)
+                        .WithRegion(Region.USWest)
+                        .WithNewResourceGroup(rgName)
+                        .WithNewWindowsPlan(PricingTier.StandardS1)
+                        .WithJavaVersion(JavaVersion.V8Newest)
+                        .WithWebContainer(WebContainer.Tomcat8_0Newest)
+                        .Create();
+
+                Utilities.Log("Created web app " + app1.Name);
+                Utilities.Print(app1);
+
+                //============================================================
+                // Create a 3rd web app with a public GitHub repo in Azure-Samples
+
+                Utilities.Log("Creating another web app " + app3Name + "...");
+                var app3 = azure.WebApps
+                        .Define(app3Name)
+                        .WithRegion(Region.USWest)
+                        .WithNewResourceGroup(rgName)
+                        .WithNewWindowsPlan(PricingTier.StandardS1)
+                        .DefineSourceControl()
+                            .WithPublicGitRepository("https://github.com/Azure-Samples/app-service-web-dotnet-get-started")
+                            .WithBranch("master")
+                            .Attach()
+                        .Create();
+
+                Utilities.Log("Created web app " + app3.Name);
+                Utilities.Print(app3);
+
+                // warm up
+                Utilities.Log("Warming up " + app3Url + "...");
+                Utilities.CheckAddress("http://" + app3Url);
+                SdkContext.DelayProvider.Delay(5000);
+                Utilities.Log("CURLing " + app3Url + "...");
+                Utilities.Log(Utilities.CheckAddress("http://" + app3Url));
+
+                //============================================================
+                // Create a 5th web app with web deploy
+
+                Utilities.Log("Creating another web app " + app5Name + "...");
+
+                var plan = azure.AppServices.AppServicePlans.GetById(app1.AppServicePlanId);
+                IWebApp app5 = azure.WebApps.Define(app5Name)
+                    .WithExistingWindowsPlan(plan)
+                    .WithExistingResourceGroup(rgName)
+                    .WithNetFrameworkVersion(NetFrameworkVersion.V4_6)
                     .Create();
 
-                //=============================================================
-                // Create storage account.
+                Utilities.Log("Created web app " + app5.Name);
+                Utilities.Print(app5);
 
-                Utilities.Log("Creating a storage account with name: " + resourceName1);
+                //============================================================
+                // Deploy to the 5th web app through web deploy
 
-                var storageAccount = azure.StorageAccounts
-                    .Define(resourceName1)
-                    .WithRegion(Region.USWest)
-                    .WithExistingResourceGroup(resourceGroupName)
-                    .Create();
+                Utilities.Log("Deploying a bakery website to " + app5Name + " through web deploy...");
 
-                Utilities.Log("Storage account created: " + storageAccount.Id);
+                app5.Deploy()
+                    .WithPackageUri("https://github.com/Azure/azure-libraries-for-net/raw/master/Tests/Fluent.Tests/Assets/bakery-webapp.zip")
+                    .WithExistingDeploymentsDeleted(true)
+                    .Execute();
 
-                //=============================================================
-                // Update - set the sku name
+                Utilities.Log("Deployment to web app " + app5Name + " completed.");
+                Utilities.Print(app5);
 
-                Utilities.Log("Updating the storage account with name: " + resourceName1);
-
-                storageAccount.Update()
-                    .WithSku(Microsoft.Azure.Management.Storage.Fluent.Models.SkuName.StandardRAGRS)
-                    .Apply();
-
-                Utilities.Log("Updated the storage account with name: " + resourceName1);
-
-                //=============================================================
-                // Create another storage account.
-
-                Utilities.Log("Creating another storage account with name: " + resourceName2);
-
-                var storageAccount2 = azure.StorageAccounts.Define(resourceName2)
-                    .WithRegion(Region.USWest)
-                    .WithExistingResourceGroup(resourceGroupName)
-                    .Create();
-
-                Utilities.Log("Storage account created: " + storageAccount2.Id);
-
-                //=============================================================
-                // List storage accounts.
-
-                Utilities.Log("Listing all storage accounts for resource group: " + resourceGroupName);
-
-                foreach (var sAccount in azure.StorageAccounts.List())
-                {
-                    Utilities.Log("Storage account: " + sAccount.Name);
-                }
-
-                //=============================================================
-                // Delete a storage accounts.
-
-                Utilities.Log("Deleting storage account: " + resourceName2);
-
-                azure.StorageAccounts.DeleteById(storageAccount2.Id);
-
-                Utilities.Log("Deleted storage account: " + resourceName2);
+                // warm up
+                Utilities.Log("Warming up " + app5Url + "...");
+                Utilities.CheckAddress("http://" + app5Url);
+                SdkContext.DelayProvider.Delay(5000);
+                Utilities.Log("CURLing " + app5Url + "...");
+                Utilities.Log(Utilities.CheckAddress("http://" + app5Url));
+            }
+            catch (FileNotFoundException)
+            {
+                Utilities.Log("Cannot find 'git' command line. Make sure Git is installed and the directory of git.exe is included in your PATH environment variable.");
             }
             finally
             {
                 try
                 {
-                    Utilities.Log("Deleting Resource Group: " + resourceGroupName);
-                    azure.ResourceGroups.DeleteByName(resourceGroupName);
-                    Utilities.Log("Deleted Resource Group: " + resourceGroupName);
+                    Utilities.Log("Deleting Resource Group: " + rgName);
+                    azure.ResourceGroups.DeleteByName(rgName);
+                    Utilities.Log("Deleted Resource Group: " + rgName);
                 }
-                catch (Exception ex)
+                catch (NullReferenceException)
                 {
-                    Utilities.Log(ex);
+                    Utilities.Log("Did not create any resources in Azure. No clean up is necessary");
+                }
+                catch (Exception g)
+                {
+                    Utilities.Log(g);
                 }
             }
         }
