@@ -13,7 +13,7 @@ namespace E2E
         const string ProddiagVaultBaseUrl = "https://vsproddiag-test.vault.azure.net/";
         const string ProddiagSecretName = "CertString";
 
-        public static async Task<string> Access()
+        public static async Task<bool> Access()
         {           
             // According to https://docs.microsoft.com/en-us/azure/key-vault/service-to-service-authentication
             // For local development, AzureServiceTokenProvider fetches tokens with Azure AD Integrated Authentication. However we can 
@@ -21,7 +21,7 @@ namespace E2E
             //var azureServiceTokenProvider = new AzureServiceTokenProvider();
             //string accessToken = await azureServiceTokenProvider.GetAccessTokenAsync("https://vault.azure.net/").ConfigureAwait(false);
 
-            var azureServiceTokenProvider = new AzureServiceTokenProvider("RunAs=CurrentUser");
+            var azureServiceTokenProvider = new AzureServiceTokenProvider("AuthenticateAs=User");
             string certString = string.Empty;
             using (var kv = new KeyVaultClient(new KeyVaultClient.AuthenticationCallback(azureServiceTokenProvider.KeyVaultTokenCallback)))
             {
@@ -43,14 +43,10 @@ namespace E2E
             cert.Import(Convert.FromBase64String(certString));
 
             // If you want to serialize the certificate to a file
-            //byte[] bytes = Convert.FromBase64String(certString);
-            //System.IO.File.WriteAllBytes("D:\\cert.pfx", bytes);
+            byte[] bytes = Convert.FromBase64String(certString);
+            System.IO.File.WriteAllBytes("D:\\cert.pfx", bytes);
 
-            string authority = String.Format(Configuration.Authority, Configuration.TenantId);
-            AuthenticationContext authContext = new AuthenticationContext(authority);
-            AuthenticationResult token = await authContext.AcquireTokenAsync("https://management.azure.com/", new ClientAssertionCertificate(Configuration.ClientId, cert));           
-
-            return token.AccessToken;
+            return true;
         }
     }
 }
