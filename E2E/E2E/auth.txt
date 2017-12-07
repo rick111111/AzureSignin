@@ -1,0 +1,9 @@
+subscription=1129b994-1ec6-487b-a948-7fef2a413d26
+client=2de6aaf5-2694-4563-a47c-110df3c0ffc6
+tenant=72f988bf-86f1-41af-91ab-2d7cd011db47
+certificate=D\:\\cert.pfx
+certificatePassword=
+managementURI=https\://management.core.windows.net/
+baseURL=https\://management.azure.com/
+authURL=https\://login.windows.net/
+graphURL=https\://graph.windows.net/
