@@ -138,14 +138,13 @@ namespace E2E
             }
         }
 
-        public static void RunSample()
+        public static void RunSample(string configFilePath)
         {
-
             try
             {
                 //=================================================================
                 // Authenticate
-                AzureCredentials credentials = SdkContext.AzureCredentialsFactory.FromFile(".\\auth.txt");
+                AzureCredentials credentials = SdkContext.AzureCredentialsFactory.FromFile(configFilePath);
 
                 var azure = Azure
                     .Configure()

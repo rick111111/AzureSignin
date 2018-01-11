@@ -22,8 +22,26 @@ namespace AzureSignin
 
             // 3. Use Rest API to access Azure Resource
             HttpClientSample client = new HttpClientSample();
-            bool exist = client.IsResourceGroupExist(Configuration.SubscriptionId, "rg1").Result;
-            exist = client.IsResourceGroupExist(Configuration.SubscriptionId, "rg2").Result;
+
+            string resourceGroupName = "rg4";
+            bool exist;
+            exist = client.IsResourceGroupExist(Configuration.SubscriptionId, resourceGroupName).Result;
+            if (!exist)
+            {
+                bool success = client.CreateResourceGroup(Configuration.SubscriptionId, resourceGroupName).Result;
+                exist = client.IsResourceGroupExist(Configuration.SubscriptionId, resourceGroupName).Result;
+            }
+
+            DeploymentParameterObject dpo = new DeploymentParameterObject()
+            {
+                name = new Name() { value = "faxue-web12" },
+                serverFarmResourceGroup = new ServerFarmResourceGroup() { value = resourceGroupName },
+                hostingPlanName = new HostingPlanName() { value = "sp12" },
+                subscriptionId = new SubscriptionId() { value = Configuration.SubscriptionId }
+            };
+
+            exist = client.ValidateResourceTemplate(dpo).Result;
+            exist = client.DeployResourceTemplate(dpo).Result;
         }
     }
 }

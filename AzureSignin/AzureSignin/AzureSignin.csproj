@@ -97,9 +97,11 @@
     <Compile Include="AccessWithKeyVaultCertificate.cs" />
     <Compile Include="AccessWithLocalCertificate.cs" />
     <Compile Include="AzureRequest.cs" />
+    <Compile Include="DeploymentRootObject.cs" />
     <Compile Include="HttpClientSample.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ResourceGroupObject.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config">

@@ -10,6 +10,7 @@ namespace AzureSignin
 {
     internal enum HttpMethods
     {
+        HEAD,
         POST,
         GET,
         PUT,
