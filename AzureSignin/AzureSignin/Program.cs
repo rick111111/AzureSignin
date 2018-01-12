@@ -53,6 +53,12 @@ namespace AzureSignin
             {
                 result = client.DeployWebApp(Configuration.SubscriptionId, resourceGroupName, webAppName, @"C:\Users\faxue\source\repos\faxue-desktopWeb\faxue-desktopWeb\bin\Release\PublishOutput.zip").Result;
             }
+
+            if (result)
+            {
+                string s = client.VisitWebApp(webAppName).Result;
+                result = !string.IsNullOrEmpty(s);
+            }
         }
     }
 }

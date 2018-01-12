@@ -4,6 +4,7 @@ using System;
 using System.IO;
 using System.IO.Compression;
 using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
 using System.Xml;
 
@@ -24,7 +25,8 @@ namespace AzureSignin.Communication
         const string WebAppDeploymentValidationUri = "/subscriptions/{0}/resourcegroups/{1}/providers/Microsoft.Resources/deployments/template/validate?api-version=2016-09-01";
 
         const string WebAppPublishProfile = "/subscriptions/{0}/resourcegroups/{1}/providers/Microsoft.Web/sites/{2}/publishxml?api-version=2016-08-01";
-        
+        const string WebAppUrl = "https://{0}.azurewebsites.net";
+
         private async Task<string> GetAccessToken()
         {
             return await AccessWithKeyVaultCertificate.Access();
@@ -72,7 +74,7 @@ namespace AzureSignin.Communication
                     string response = await AzureRequest.GetResponse(url, azureAccessToken, HttpMethods.HEAD);
                     return true;
                 }
-                catch (WebException e)
+                catch (WebException)
                 {
                     return false;
                 }
@@ -97,7 +99,7 @@ namespace AzureSignin.Communication
                     string response = await AzureRequest.GetResponse(url, azureAccessToken, HttpMethods.PUT, null, body);
                     return true;
                 }
-                catch (WebException e)
+                catch (WebException)
                 {
                     return false;
                 }
@@ -114,7 +116,7 @@ namespace AzureSignin.Communication
                     string response = await AzureRequest.GetResponse(url, azureAccessToken, HttpMethods.GET);
                     return true;
                 }
-                catch (WebException e)
+                catch (WebException)
                 {
                     return false;
                 }
@@ -131,7 +133,7 @@ namespace AzureSignin.Communication
                     string response = await AzureRequest.GetResponse(url, azureAccessToken, HttpMethods.DELETE);
                     return true;
                 }
-                catch (WebException e)
+                catch (WebException)
                 {
                     return false;
                 }
@@ -148,7 +150,7 @@ namespace AzureSignin.Communication
                     string response = await AzureRequest.GetResponse(url, azureAccessToken, HttpMethods.GET);
                     return true;
                 }
-                catch (WebException e)
+                catch (WebException)
                 {
                     return false;
                 }
@@ -165,7 +167,7 @@ namespace AzureSignin.Communication
                     string response = await AzureRequest.GetResponse(url, azureAccessToken, HttpMethods.DELETE);
                     return true;
                 }
-                catch (WebException e)
+                catch (WebException)
                 {
                     return false;
                 }
@@ -184,7 +186,7 @@ namespace AzureSignin.Communication
                     string response = await AzureRequest.GetResponse(url, azureAccessToken, HttpMethods.POST, null, body);
                     return true;
                 }
-                catch (WebException e)
+                catch (WebException)
                 {
                     return false;
                 }
@@ -228,7 +230,7 @@ namespace AzureSignin.Communication
 
                     return false;
                 }
-                catch (WebException e)
+                catch (WebException)
                 {
                     return false;
                 }
@@ -273,7 +275,7 @@ namespace AzureSignin.Communication
                 {
                     return await AzureRequest.GetResponse(url, azureAccessToken, HttpMethods.POST, null);
                 }
-                catch (WebException e)
+                catch (WebException)
                 {
                     return string.Empty;
                 }
@@ -328,7 +330,7 @@ namespace AzureSignin.Communication
                 FtpClient ftpClient = new FtpClient(url, username, password);
                 ftpClient.UploadDirectory(url, Path.Combine(localFolder, Path.GetFileNameWithoutExtension(localZip)));
             }
-            catch(Exception e)
+            catch(Exception)
             {
                 return false;
             }
@@ -341,6 +343,24 @@ namespace AzureSignin.Communication
             }
 
             return true;
+        }
+
+        public async Task<string> VisitWebApp(string webAppName)
+        {
+            string url = string.Format(WebAppUrl, webAppName);
+
+            try
+            {
+                using (var client = new HttpClient())
+                {
+                    var response = await client.GetAsync(url);
+                    return response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+                }
+            }
+            catch (Exception)
+            {
+                return string.Empty;
+            }
         }
 
         private enum ProvisioningState
