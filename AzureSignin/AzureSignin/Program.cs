@@ -1,4 +1,6 @@
-﻿
+﻿using AzureSignin.Communication;
+using System.Xml;
+
 namespace AzureSignin
 {
     internal static class Configuration
@@ -14,34 +16,43 @@ namespace AzureSignin
     {
         static void Main(string[] args)
         {
-            // 1. Install certificate to local and access Azure with local certificate
-            // AccessWithLocalCertificate.Access().Wait();
-
-            // 2. Upload certificate to Azure KeyVault and access Azure with KeyVault certificate
-            // string accessToken = AccessWithKeyVaultCertificate.Access().Result;
-
-            // 3. Use Rest API to access Azure Resource
-            HttpClientSample client = new HttpClientSample();
+            HttpClientHelper client = new HttpClientHelper();
 
             string resourceGroupName = "rg4";
-            bool exist;
-            exist = client.IsResourceGroupExist(Configuration.SubscriptionId, resourceGroupName).Result;
-            if (!exist)
+            string webAppName = "faxue-web16";
+            string appServicePlanName = "sp12";
+            bool result;
+            result = client.CheckResourceGroupExist(Configuration.SubscriptionId, resourceGroupName).Result;
+            if (!result)
             {
-                bool success = client.CreateResourceGroup(Configuration.SubscriptionId, resourceGroupName).Result;
-                exist = client.IsResourceGroupExist(Configuration.SubscriptionId, resourceGroupName).Result;
+                result = client.CreateResourceGroup(Configuration.SubscriptionId, resourceGroupName, "westus2").Result;
             }
 
-            DeploymentParameterObject dpo = new DeploymentParameterObject()
+            if (result)
             {
-                name = new Name() { value = "faxue-web12" },
-                serverFarmResourceGroup = new ServerFarmResourceGroup() { value = resourceGroupName },
-                hostingPlanName = new HostingPlanName() { value = "sp12" },
-                subscriptionId = new SubscriptionId() { value = Configuration.SubscriptionId }
-            };
+                if (client.CheckAppServiceExist(Configuration.SubscriptionId, resourceGroupName, webAppName).Result)
+                {
+                    result = client.DeleteAppService(Configuration.SubscriptionId, resourceGroupName, webAppName).Result;
+                }
+            }
 
-            exist = client.ValidateResourceTemplate(dpo).Result;
-            exist = client.DeployResourceTemplate(dpo).Result;
+            if (result)
+            {
+                DeploymentParameterObject dpo = new DeploymentParameterObject()
+                {
+                    name = new Name() { value = webAppName },
+                    serverFarmResourceGroup = new ServerFarmResourceGroup() { value = resourceGroupName },
+                    hostingPlanName = new HostingPlanName() { value = appServicePlanName },
+                    subscriptionId = new SubscriptionId() { value = Configuration.SubscriptionId }
+                };
+
+                result = client.DeployResourceTemplate(dpo).Result;
+            }
+
+            if (result)
+            {
+                result = client.DeployWebApp(Configuration.SubscriptionId, resourceGroupName, webAppName, @"C:\Users\faxue\source\repos\faxue-desktopWeb\faxue-desktopWeb\bin\Release\PublishOutput.zip").Result;
+            }
         }
     }
 }
