@@ -105,6 +105,23 @@ namespace AzureSignin.Communication
                 }
             });
         }
+        
+        public async Task<bool> DeleteResourceGroup(string subscriptionId, string resourceGroupName)
+        {
+            string url = GetUri(ResourceGroupUri, subscriptionId, resourceGroupName);
+
+            return await ExecuteWithRetryTokenRefresh(async (azureAccessToken) => {
+                try
+                {
+                    string response = await AzureRequest.GetResponse(url, azureAccessToken, HttpMethods.DELETE);
+                    return true;
+                }
+                catch (WebException)
+                {
+                    return false;
+                }
+            });
+        }
 
         public async Task<bool> CheckServicePlanExist(string subscriptionId, string resourceGroupName, string servicePlanName)
         {
