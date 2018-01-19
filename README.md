@@ -24,3 +24,8 @@
 5. Trouble Shooting
     - When failed to load binaries, check the fusionlog in exception
     - On CryptographicException of message "Keyset does not exist", try run the app as admin, it might because non-admin app not able to load private key from local machine
+
+	AppAuthenticationNuget -- Sign in with AppAuthentication 1.1
+	AppAuthenticationOldNuget -- Sign in with AppAuthentication 0.2 to avoid binary confict with Fluent library
+	AzureSignin -- Sign in with AppAuthentication 1.1, and call REST API directly without Fluent
+	ResourceManager -- Fluent only, sign in with cert.pfx file

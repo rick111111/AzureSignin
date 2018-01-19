@@ -6,7 +6,7 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AzureSignin
+namespace Microsoft.Test.Apex.VisualStudio.Debugger.Tests.SnapshotDebugger
 {
     internal enum HttpMethods
     {

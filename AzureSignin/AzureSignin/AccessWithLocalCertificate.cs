@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 
-namespace AzureSignin
+namespace Microsoft.Test.Apex.VisualStudio.Debugger.Tests.SnapshotDebugger
 {
     internal static class AccessWithLocalCertificate
     {

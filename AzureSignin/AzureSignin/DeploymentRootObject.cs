@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AzureSignin.Communication
+namespace Microsoft.Test.Apex.VisualStudio.Debugger.Tests.SnapshotDebugger
 {
     public class DeploymentTemplateObject
     {

@@ -2,7 +2,7 @@
 using System.IO;
 using System.Net;
 
-namespace AzureSignin.Communication
+namespace Microsoft.Test.Apex.VisualStudio.Debugger.Tests.SnapshotDebugger
 {
     public sealed class FtpClient
     {

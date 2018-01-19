@@ -100,7 +100,7 @@
     <Compile Include="AzureRequest.cs" />
     <Compile Include="DeploymentRootObject.cs" />
     <Compile Include="FtpClient.cs" />
-    <Compile Include="HttpClientHelper.cs" />
+    <Compile Include="AzureRestClient.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ResourceGroupObject.cs" />

@@ -1,7 +1,6 @@
-﻿using AzureSignin.Communication;
-using System.Xml;
+﻿using System.Xml;
 
-namespace AzureSignin
+namespace Microsoft.Test.Apex.VisualStudio.Debugger.Tests.SnapshotDebugger
 {
     internal static class Configuration
     {
@@ -16,7 +15,7 @@ namespace AzureSignin
     {
         static void Main(string[] args)
         {
-            HttpClientHelper client = new HttpClientHelper();
+            AzureRestClient client = new AzureRestClient();
 
             string resourceGroupName = "rg4";
             string webAppName = "faxue-web16";

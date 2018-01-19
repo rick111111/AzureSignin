@@ -8,9 +8,9 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using System.Xml;
 
-namespace AzureSignin.Communication
+namespace Microsoft.Test.Apex.VisualStudio.Debugger.Tests.SnapshotDebugger
 {
-    internal class HttpClientHelper
+    internal class AzureRestClient
     {
         private string _azureAccessToken;
 
