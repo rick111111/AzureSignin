@@ -6,7 +6,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{3BADCFF0-CBC4-49DA-92AA-D922BB0B2553}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>AzureSignin</RootNamespace>
+    <RootNamespace>Microsoft.Test.Apex.VisualStudio.Debugger.Tests.SnapshotDebugger</RootNamespace>
     <AssemblyName>AzureSignin</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -98,12 +98,13 @@
     <Compile Include="AccessWithKeyVaultCertificate.cs" />
     <Compile Include="AccessWithLocalCertificate.cs" />
     <Compile Include="AzureRequest.cs" />
-    <Compile Include="DeploymentRootObject.cs" />
+    <Compile Include="ServicePlanObject.cs" />
     <Compile Include="FtpClient.cs" />
     <Compile Include="AzureRestClient.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ResourceGroupObject.cs" />
+    <Compile Include="AppServiceObject.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config">

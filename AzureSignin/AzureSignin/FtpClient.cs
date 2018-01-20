@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Net;
 
 namespace Microsoft.Test.Apex.VisualStudio.Debugger.Tests.SnapshotDebugger
@@ -14,7 +13,7 @@ namespace Microsoft.Test.Apex.VisualStudio.Debugger.Tests.SnapshotDebugger
         {
             _url = url;
             _username = userName;
-            _password = password;
+            _password = password; 
         }
 
         public void UploadDirectory(string remotePath, string localPath)
@@ -36,7 +35,7 @@ namespace Microsoft.Test.Apex.VisualStudio.Debugger.Tests.SnapshotDebugger
 
         public void UploadFile(string remoteFile, string localFile)
         {
-            using (WebClient client = new WebClient())
+            using (System.Net.WebClient client = new System.Net.WebClient())
             {
                 client.Credentials = new NetworkCredential(_username, _password);
                 client.UploadFile(remoteFile, localFile);

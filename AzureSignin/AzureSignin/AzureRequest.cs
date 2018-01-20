@@ -108,7 +108,7 @@ namespace Microsoft.Test.Apex.VisualStudio.Debugger.Tests.SnapshotDebugger
             }
 
             request.UserAgent = "Apex Test";
-            request.Headers.Add(HttpRequestHeader.Authorization, "Bearer " + token);
+            request.Headers.Add(HttpRequestHeader.Authorization, token);
             request.Accept = contentType;
 
             // Add content information

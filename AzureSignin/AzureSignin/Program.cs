@@ -1,4 +1,6 @@
-﻿using System.Xml;
+﻿using System;
+using System.Linq;
+using System.Xml;
 
 namespace Microsoft.Test.Apex.VisualStudio.Debugger.Tests.SnapshotDebugger
 {
@@ -13,39 +15,47 @@ namespace Microsoft.Test.Apex.VisualStudio.Debugger.Tests.SnapshotDebugger
 
     class Program
     {
+        public static string RandomString(int length)
+        {
+            Random random = new Random();
+            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            return new string(Enumerable.Repeat(chars, length).Select(s => s[random.Next(s.Length)]).ToArray());
+        }
+
         static void Main(string[] args)
         {
             AzureRestClient client = new AzureRestClient();
 
-            string resourceGroupName = "rg4";
-            string webAppName = "faxue-web16";
-            string appServicePlanName = "sp12";
+            string suffix = RandomString(5);
+            string resourceGroupName = "rg" + suffix;
+            string webAppName = "faxue-web" + suffix;
+            string appServicePlanName = "sp" + suffix;
+            string location = "westus2";
+
             bool result;
-            result = client.CheckResourceGroupExist(Configuration.SubscriptionId, resourceGroupName).Result;
+            result = client.GetResourceGroup(Configuration.SubscriptionId, resourceGroupName).Result;
             if (!result)
             {
-                result = client.CreateResourceGroup(Configuration.SubscriptionId, resourceGroupName, "westus2").Result;
+                result = client.CreateResourceGroup(Configuration.SubscriptionId, resourceGroupName, location).Result;
             }
 
             if (result)
             {
-                if (client.CheckAppServiceExist(Configuration.SubscriptionId, resourceGroupName, webAppName).Result)
+                if (client.GetAppService(Configuration.SubscriptionId, resourceGroupName, webAppName).Result)
                 {
                     result = client.DeleteAppService(Configuration.SubscriptionId, resourceGroupName, webAppName).Result;
                 }
-            }
-
-            if (result)
-            {
-                DeploymentParameterObject dpo = new DeploymentParameterObject()
+                
+                // check ServicePlan after deleting WebApp, deleting a WebApp might cause the ServicePlan also being deleted
+                if (!client.GetServicePlan(Configuration.SubscriptionId, resourceGroupName, appServicePlanName).Result)
                 {
-                    name = new Name() { value = webAppName },
-                    serverFarmResourceGroup = new ServerFarmResourceGroup() { value = resourceGroupName },
-                    hostingPlanName = new HostingPlanName() { value = appServicePlanName },
-                    subscriptionId = new SubscriptionId() { value = Configuration.SubscriptionId }
-                };
+                    result = client.CreateServicePlan(Configuration.SubscriptionId, resourceGroupName, appServicePlanName, location).Result;
+                }
 
-                result = client.DeployResourceTemplate(dpo).Result;
+                if (result)
+                {
+                    result = client.CreateAppService(Configuration.SubscriptionId, resourceGroupName, appServicePlanName, webAppName, location).Result;
+                }
             }
 
             if (result)
@@ -55,8 +65,9 @@ namespace Microsoft.Test.Apex.VisualStudio.Debugger.Tests.SnapshotDebugger
 
             if (result)
             {
-                string s = client.VisitWebApp(webAppName).Result;
-                result = !string.IsNullOrEmpty(s);
+                bool s = client.VisitWebApp(webAppName, 60).Result;
+                if (!s)
+                    System.Diagnostics.Debugger.Break();
             }
         }
     }

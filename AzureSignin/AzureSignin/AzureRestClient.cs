@@ -18,14 +18,18 @@ namespace Microsoft.Test.Apex.VisualStudio.Debugger.Tests.SnapshotDebugger
         const string ResourceGroupId = "/subscriptions/{0}/resourcegroups/{1}";
         const string ResourceGroupUri = "/subscriptions/{0}/resourcegroups/{1}?api-version=2016-09-01";
 
+        const string ServicePlanId = "/subscriptions/{0}/resourceGroups/{1}/providers/Microsoft.Web/serverfarms/{2}";
         const string ServicePlanUri = "/subscriptions/{0}/resourceGroups/{1}/providers/Microsoft.Web/serverfarms/{2}?api-version=2016-09-01";
-        const string WebAppUri = "/subscriptions/{0}/resourceGroups/{1}/providers/Microsoft.Web/sites/{2}/?api-version=2016-08-01";
+        const string ServicePlanUriListApps = "/subscriptions/{0}/resourceGroups/{1}/providers/Microsoft.Web/serverfarms/{2}/sites?api-version=2016-09-01";
 
+        const string WebAppUri = "/subscriptions/{0}/resourceGroups/{1}/providers/Microsoft.Web/sites/{2}/?api-version=2016-08-01";
+        const string WebAppDeleteUri = "/subscriptions/{0}/resourceGroups/{1}/providers/Microsoft.Web/sites/{2}/?deleteEmptyServerFarm=true&api-version=2016-08-01";
         const string WebAppDeploymentUri = "/subscriptions/{0}/resourcegroups/{1}/providers/Microsoft.Resources/deployments/template?api-version=2016-09-01";
         const string WebAppDeploymentValidationUri = "/subscriptions/{0}/resourcegroups/{1}/providers/Microsoft.Resources/deployments/template/validate?api-version=2016-09-01";
 
         const string WebAppPublishProfile = "/subscriptions/{0}/resourcegroups/{1}/providers/Microsoft.Web/sites/{2}/publishxml?api-version=2016-08-01";
         const string WebAppUrl = "https://{0}.azurewebsites.net";
+        const string WebAppKuduUrl = "https://{0}.scm.azurewebsites.net";
 
         private async Task<string> GetAccessToken()
         {
@@ -64,7 +68,7 @@ namespace Microsoft.Test.Apex.VisualStudio.Debugger.Tests.SnapshotDebugger
             return ManagementEndpoint + uri;
         }
 
-        public async Task<bool> CheckResourceGroupExist(string subscriptionId, string resourceGroupName)
+        public async Task<bool> GetResourceGroup(string subscriptionId, string resourceGroupName)
         {
             string url = GetUri(ResourceGroupUri, subscriptionId, resourceGroupName);
 
@@ -122,8 +126,8 @@ namespace Microsoft.Test.Apex.VisualStudio.Debugger.Tests.SnapshotDebugger
                 }
             });
         }
-
-        public async Task<bool> CheckServicePlanExist(string subscriptionId, string resourceGroupName, string servicePlanName)
+        
+        public async Task<bool> GetServicePlan(string subscriptionId, string resourceGroupName, string servicePlanName)
         {
             string url = GetUri(ServicePlanUri, subscriptionId, resourceGroupName, servicePlanName);
 
@@ -131,6 +135,36 @@ namespace Microsoft.Test.Apex.VisualStudio.Debugger.Tests.SnapshotDebugger
                 try
                 {
                     string response = await AzureRequest.GetResponse(url, azureAccessToken, HttpMethods.GET);
+                    return true;
+                }
+                catch (WebException)
+                {
+                    return false;
+                }
+            });
+        }
+
+        public async Task<bool> CreateServicePlan(string subscriptionId, string resourceGroupName, string servicePlanName, string location)
+        {
+            string url = GetUri(ServicePlanUri, subscriptionId, resourceGroupName, servicePlanName);
+
+            ServicePlanObject spo = new ServicePlanObject()
+            {
+                kind = "app",
+                sku = new ServicePlanObject.Sku()
+                {
+                    name = "S1",
+                    tier = "Standard",
+                    size = "S1"
+                },
+                location = location,
+            };
+            string body = JsonConvert.SerializeObject(spo);
+
+            return await ExecuteWithRetryTokenRefresh(async (azureAccessToken) => {
+                try
+                {
+                    string response = await AzureRequest.GetResponse(url, azureAccessToken, HttpMethods.PUT, null, body);
                     return true;
                 }
                 catch (WebException)
@@ -142,6 +176,9 @@ namespace Microsoft.Test.Apex.VisualStudio.Debugger.Tests.SnapshotDebugger
 
         public async Task<bool> DeleteServicePlan(string subscriptionId, string resourceGroupName, string servicePlanName)
         {
+            // TODO: Need to delete all the apps inside ServicePlan, ServicePlan with app can't be deleted unless it's empty
+            // string listUrl = GetUri(ServicePlanUriListApps, subscriptionId, resourceGroupName, servicePlanName);
+
             string url = GetUri(ServicePlanUri, subscriptionId, resourceGroupName, servicePlanName);
 
             return await ExecuteWithRetryTokenRefresh(async (azureAccessToken) => {
@@ -157,7 +194,7 @@ namespace Microsoft.Test.Apex.VisualStudio.Debugger.Tests.SnapshotDebugger
             });
         }
 
-        public async Task<bool> CheckAppServiceExist(string subscriptionId, string resourceGroupName, string appServiceName)
+        public async Task<bool> GetAppService(string subscriptionId, string resourceGroupName, string appServiceName)
         {
             string url = GetUri(WebAppUri, subscriptionId, resourceGroupName, appServiceName);
 
@@ -174,9 +211,38 @@ namespace Microsoft.Test.Apex.VisualStudio.Debugger.Tests.SnapshotDebugger
             });
         }
 
+        public async Task<bool> CreateAppService(string subscriptionId, string resourceGroupName, string servicePlanName, string appServiceName, string location)
+        {
+            string servicePlanId = GetUri(ServicePlanId, subscriptionId, resourceGroupName, servicePlanName);
+            string appServiceUrl = GetUri(WebAppUri, subscriptionId, resourceGroupName, appServiceName);
+
+            AppServiceObject aso = new AppServiceObject()
+            {
+                kind = "app",
+                properties = new AppServiceObject.Properties()
+                {
+                    serverFarmId = servicePlanId,
+                },
+                location = location
+            };
+            string body = JsonConvert.SerializeObject(aso);
+
+            return await ExecuteWithRetryTokenRefresh(async (azureAccessToken) => {
+                try
+                {
+                    string response = await AzureRequest.GetResponse(appServiceUrl, azureAccessToken, HttpMethods.PUT, null, body);
+                    return true;
+                }
+                catch (WebException)
+                {
+                    return false;
+                }
+            });
+        }
+
         public async Task<bool> DeleteAppService(string subscriptionId, string resourceGroupName, string appServiceName)
         {
-            string url = GetUri(WebAppUri, subscriptionId, resourceGroupName, appServiceName);
+            string url = GetUri(WebAppDeleteUri, subscriptionId, resourceGroupName, appServiceName);
 
             return await ExecuteWithRetryTokenRefresh(async (azureAccessToken) => {
                 try
@@ -189,98 +255,6 @@ namespace Microsoft.Test.Apex.VisualStudio.Debugger.Tests.SnapshotDebugger
                     return false;
                 }
             });
-        }
-
-        public async Task<bool> ValidateResourceTemplate(DeploymentParameterObject parameterObject)
-        {
-            string url = GetUri(WebAppDeploymentValidationUri, parameterObject.subscriptionId.value, parameterObject.serverFarmResourceGroup.value);
-
-            string body = GenerateDeploymentTemplate(parameterObject);
-
-            return await ExecuteWithRetryTokenRefresh(async (azureAccessToken) => {
-                try
-                {
-                    string response = await AzureRequest.GetResponse(url, azureAccessToken, HttpMethods.POST, null, body);
-                    return true;
-                }
-                catch (WebException)
-                {
-                    return false;
-                }
-            });
-        }
-
-        public async Task<bool> DeployResourceTemplate(DeploymentParameterObject parameterObject)
-        {
-            string url = GetUri(WebAppDeploymentUri, parameterObject.subscriptionId.value, parameterObject.serverFarmResourceGroup.value);
-
-            string body = GenerateDeploymentTemplate(parameterObject);
-
-            return await ExecuteWithRetryTokenRefresh(async (azureAccessToken) => {
-                try
-                {
-                    string response = await AzureRequest.GetResponse(url, azureAccessToken, HttpMethods.PUT, null, body);
-                    ProvisioningState state = GetProvisioningState(response);
-                    if (state == ProvisioningState.Succeeded)
-                    {
-                        return true;
-                    }
-
-                    if (state == ProvisioningState.Accepted)
-                    {
-                        // Wait for up to 2 mins for provisioning finish
-                        for (int i = 0; i < 60; ++i)
-                        {
-                            await Task.Delay(2000);
-                            response = await AzureRequest.GetResponse(url, azureAccessToken, HttpMethods.GET, null, null);
-                            state = GetProvisioningState(response);
-                            if (state == ProvisioningState.Succeeded)
-                            {
-                                return true;
-                            }
-                            if (state != ProvisioningState.Running)
-                            {
-                                return false;
-                            }
-                        }
-                    }
-
-                    return false;
-                }
-                catch (WebException)
-                {
-                    return false;
-                }
-            });
-        }
-
-        private string GenerateDeploymentTemplate(DeploymentParameterObject parameterObject)
-        {
-            DeploymentTemplateObject dto = new DeploymentTemplateObject()
-            {
-                properties = new DeploymentRootProperties()
-                {
-                    template = JsonConvert.DeserializeObject(DeploymentRootProperties.TemplateJsonString),
-                    parameters = parameterObject
-                }
-            };
-
-            return JsonConvert.SerializeObject(dto);
-        }
-
-        private ProvisioningState GetProvisioningState(string response)
-        {
-            try
-            {
-                JObject jobject = JsonConvert.DeserializeObject(response) as JObject;
-                var provisioningState = jobject["properties"]["provisioningState"] as JValue;
-                Enum.TryParse<ProvisioningState>(provisioningState.Value as string, out ProvisioningState state);
-                return state;
-            }
-            catch
-            {
-                return ProvisioningState.None;
-            }
         }
 
         public async Task<string> GetWebAppPublishProfile(string subscriptionId, string resourceGroupName, string webAppName)
@@ -362,22 +336,44 @@ namespace Microsoft.Test.Apex.VisualStudio.Debugger.Tests.SnapshotDebugger
             return true;
         }
 
-        public async Task<string> VisitWebApp(string webAppName)
+        public async Task<bool> VisitWebApp(string webAppName, int timeout)
         {
             string url = string.Format(WebAppUrl, webAppName);
 
-            try
+            DateTime dt = DateTime.Now;
+            bool succeeded = false;
+
+            while (!succeeded && (DateTime.Now - dt).TotalSeconds < timeout)
             {
-                using (var client = new HttpClient())
+                try
                 {
-                    var response = await client.GetAsync(url);
-                    return response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+                    using (var client = new HttpClient())
+                    {
+                        var response = await client.GetAsync(url);
+                        succeeded = response.IsSuccessStatusCode;
+                    }
+                }
+                catch (Exception)
+                {
                 }
             }
-            catch (Exception)
+
+            return succeeded;
+        }
+
+        public async Task<bool> VisitWebAppKudu(string webAppName, int timeout)
+        {
+            string url = string.Format(WebAppKuduUrl, webAppName);
+            
+            DateTime dt = DateTime.Now;
+            bool succeeded = false;
+
+            while (!succeeded && (DateTime.Now - dt).TotalSeconds < timeout)
             {
-                return string.Empty;
+                // TODO: need username/password to access Kudu
             }
+
+            return succeeded;
         }
 
         private enum ProvisioningState
