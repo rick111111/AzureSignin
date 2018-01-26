@@ -33,7 +33,7 @@ namespace Microsoft.Test.Apex.VisualStudio.Debugger.Tests.SnapshotDebugger
 
         private async Task<string> GetAccessToken()
         {
-            return await AccessWithKeyVaultCertificate.Access();
+            return await AccessWithKeyVaultCertificate2.Access();
         }
 
         private async Task<T> ExecuteWithRetryTokenRefresh<T>(Func<string, Task<T>> func)

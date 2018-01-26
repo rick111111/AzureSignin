@@ -8,9 +8,10 @@ namespace Microsoft.Test.Apex.VisualStudio.Debugger.Tests.SnapshotDebugger
     {
         public const string Authority = "https://login.microsoftonline.com/{0}";
         public const string TenantId = "72f988bf-86f1-41af-91ab-2d7cd011db47";
-        public const string ClientId = "2de6aaf5-2694-4563-a47c-110df3c0ffc6";
-        public const string SubscriptionId = "1129b994-1ec6-487b-a948-7fef2a413d26";
-        public const string CertificateSubjectName = "CN=homecert3";
+        public const string ClientId = "ed1cdd75-1c52-4f21-8851-44589c5975fc";
+        // public const string SubscriptionId = "1129b994-1ec6-487b-a948-7fef2a413d26";
+        public const string SubscriptionId = "400d8be0-b9fe-4e86-a733-74e1938f890a";
+        public const string CertificateSubjectName = "CN=ProddiagApexTest";
     }
 
     class Program
@@ -27,9 +28,9 @@ namespace Microsoft.Test.Apex.VisualStudio.Debugger.Tests.SnapshotDebugger
             AzureRestClient client = new AzureRestClient();
 
             string suffix = RandomString(5);
-            string resourceGroupName = "rg" + suffix;
+            string resourceGroupName = "faxue-rg" + suffix;
             string webAppName = "faxue-web" + suffix;
-            string appServicePlanName = "sp" + suffix;
+            string appServicePlanName = "faxue-sp" + suffix;
             string location = "westus2";
 
             bool result;
